@@ -1,0 +1,78 @@
+  
+       body{
+            width: 900px;
+            margin: 0 auto;
+            /* height: 100vh; */
+       }
+       #video-area{
+        position: fixed;
+        z-index: -1;/*最背面に設定*/
+        top: 0;
+        right:500;
+        left:500;
+        bottom:100;
+        overflow: hidden;
+    }
+    
+    #video {
+        /*天地中央配置*/
+        position: absolute;
+        z-index: -1;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        /*縦横幅指定*/
+        width: 177.77777778vh; /* 16:9 の幅→16 ÷ 9＝ 177.77% */
+        height: 56.25vw; /* 16:9の幅 → 9 ÷ 16 = 56.25% */
+        min-height: 100%;
+        min-width: 100%;
+        opacity: 0.2;
+    }
+       #calendar {
+            width: 800px;
+            margin: 20px auto;
+            margin-top: 20px;
+            /* border-top: 1px solid #ccc; */
+            /* border-bottom: 1px solid #ccc; */
+            padding-top: 20px;
+            padding-bottom: 20px;
+            padding-left: 30px;
+            padding-right: 30px;
+            background-color: rgba(231, 231, 231, 0.3);
+        }
+       #details {
+            width: 700px;
+            margin: 20px auto;
+            border-top: 10px solid #ccc;
+            padding-top: 20px;
+            padding-bottom: 20px;
+            padding-left: 50px;
+            padding-right: 50px;
+            background-color: rgba(231, 231, 231, 0.3);
+        }
+      #board {
+            width: 700px;
+            height: 100px;
+            overflow-y: auto;
+            margin: 20px auto;
+            margin-top: 20px;
+            border-top: 1px solid #ccc;
+            /* padding-bottom: 20px; */
+            padding-top: 20px;
+            padding-bottom: 20px;
+            padding-left: 50px;
+            padding-right: 50px;
+            background-color: rgba(231, 231, 231, 0.3);
+      }
+      #message-form {
+            width: 700px;
+            margin: 20px auto;
+            margin-top: 20px;
+            border-top: 1px solid #ccc;
+            border-bottom: 10px solid #ccc;
+            padding-top: 20px;
+            padding-bottom: 20px;
+            padding-left: 50px;
+            padding-right: 50px;
+      }
+      

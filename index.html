@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="stylesheet.css">
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.5/index.global.min.js'></script>
+    <script src="index.global.js"></script>
+    <script src="https://unpkg.com/@popperjs/core@2"></script>
+    <script src="https://unpkg.com/tippy.js@6"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-database.js"></script>
+
+    <title>みんなでがんばるADAスケジュール</title>
+</head>
+<body>
+    <div id="background">
+        <video id="video" poster="img/background.mp4" webkit-playsinline playsinline muted autoplay loop>
+            <source src="img/background.mp4" type="video/mp4">
+        </video>
+    </div>
+
+    <h1>みんなでがんばるADAスケジュール</h1>
+
+    <div id="calendar"></div>
+    <div id='details'></div>
+    <div id='board'></div>
+
+    <form id="message-form">
+        <input type="text" id="name-input" placeholder="Your name">
+        <input type="text" id="message-input" placeholder="Your message">
+        <button type="submit">Submit</button>
+    </form>
+
+    <script>
+        var firebaseConfig = {
+            apiKey: "AIzaSyAiT79gE5s9X28UQszXEEqCx9wNcB_SY00",
+            authDomain: "sample-ee6e1.firebaseapp.com",
+            databaseURL: "https://sample-ee6e1-default-rtdb.firebaseio.com",
+            projectId: "sample-ee6e1",
+            storageBucket: "sample-ee6e1.appspot.com",
+            messagingSenderId: "734929865290",
+            appId: "1:734929865290:web:4fcc246156ae7a9c7ff4b3"
+        };
+        firebase.initializeApp(firebaseConfig);
+
+        var currentEventId;
+
+        // カレンダー・日時フォーマット
+        function formatDateTime(date) {
+            var options = { year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' };
+            return date.toLocaleDateString('ja-JP', options);
+        }
+
+        // カレンダー・詳細表示
+        function displayEventDetails(event, detailsEl) {
+            var start = formatDateTime(event.start);
+            var end = event.end ? formatDateTime(event.end) : '';
+            var details = '<strong>' + event.title + '</strong> <a href="' + event.url + '">🔗</a><br>';
+            details += '<small>' + start + (end ? ' - ' + end : '') + '</small><br><br>';
+            details += event.extendedProps.description + '<br><br>';
+            if (event.extendedProps.location) {
+                details += 'address: ' + event.extendedProps.location + ' <a href="https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(event.extendedProps.location) + '" target="_blank">MAP🔗</a><br>';
+            }
+            detailsEl.innerHTML = details;
+        }
+
+        // 掲示板・表示
+        function displayEventBoard(event, boardEl) {
+            var boardRef = firebase.database().ref('boards/' + event.id); //メッセージ参照場所
+            boardRef.on('value', function(snapshot) { //メッセージ呼び出し
+                var messages = snapshot.val();
+                var html = '';
+                for(var key in messages) {
+                    html += '<p><strong>' + messages[key].username + '</strong>: ' + messages[key].message + '</p>';
+                }
+                boardEl.innerHTML = html; //メッセージ表示
+                boardEl.scrollTop = boardEl.scrollHeight; //スクロール最下部表示
+            });
+        }
+
+        // 掲示板・Firebaseへ保存
+        function postMessage(eventId, username, message) {
+            var boardRef = firebase.database().ref('boards/' + eventId);
+            var newMessageRef = boardRef.push(); //pushで新しい項目
+            newMessageRef.set({ //Firebaseに保存
+                username: username,
+                message: message
+            });
+        }
+
+        // 掲示板・書き込みイベント
+        document.getElementById('message-form').addEventListener('submit', function(e) {
+            e.preventDefault(); //未入力送信エラー
+            var nameInput = document.getElementById('name-input');
+            var messageInput = document.getElementById('message-input');
+            var name = nameInput.value;
+            var message = messageInput.value;
+            nameInput.value = '';
+            messageInput.value = ''; //イベント後入力フィールドをクリア
+            postMessage(currentEventId, name, message); //メッセージ投稿
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            var detailsEl = document.getElementById('details');
+            var boardEl = document.getElementById('board');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                googleCalendarApiKey: 'AIzaSyAiT79gE5s9X28UQszXEEqCx9wNcB_SY00',
+                events:'cadcab1576cc14eec8887d7a2162ad5f48824f098040ca34aeeb62748990f9c5@group.calendar.google.com',
+
+                // カレンダー・クリックイベント
+                eventClick: function(info) {
+                    try {
+                        info.jsEvent.preventDefault(); //イベントURLに遷移しない
+                        displayEventDetails(info.event, detailsEl);
+                        displayEventBoard(info.event, boardEl);
+                        currentEventId = info.event.id; //掲示板とイベントid紐づけ
+                    } catch (error) {
+                        console.error('An error occurred:', error);
+                        detailsEl.innerHTML = 'イベントの詳細を表示する際にエラーが発生しました。';
+                    }
+                },
+
+                // カレンダー・表示定義
+                eventTimeFormat: { hour: 'numeric', minute: '2-digit' }, //イベントの日時表示形式
+                eventDidMount: (e)=>{ //カレンダーにイベントを表示
+                    tippy(e.el, {
+                    content: e.event.title,
+                    });
+                },
+            });
+            calendar.render(); //カレンダー表示
+        });
+    </script>
+
+</body>
+</html>
